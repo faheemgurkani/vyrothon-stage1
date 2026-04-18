@@ -249,8 +249,8 @@ cd pocket-agent
 make install
 ```
 
-- **`make eval`** — requires `artifacts/quantized_model/` present and `inference.py` importable.
-- **`make demo`** — launches a simple chat loop using `inference.py` (needs artifacts locally).
+- **`make eval`** — requires `artifacts/quantized_model/` (see below).
+- **`make demo`** — see [Demo usage](#demo-usage).
 
 Full pipeline via notebook or:
 
@@ -277,6 +277,84 @@ pocket-agent/
 ```
 
 **Artifacts** (`artifacts/`) are gitignored — create them by running the notebook.
+
+---
+
+## Required artifacts and folder layout (inference + demos)
+
+Everything that **loads the model** ([`inference.py`](inference.py), `make eval`, `make demo`, and the **Section 10** Gradio UI in the notebook) expects a single writable tree under the **repository root**. Paths are fixed relative to [`inference.py`](inference.py): `Path(__file__).parent / "artifacts" / "quantized_model"`.
+
+### Minimum layout to run the demo
+
+You only need **`artifacts/quantized_model/`** filled by the notebook’s merge/save step (Section 7). **`artifacts/adapter/`** and **`artifacts/tokenizer/`** are **not** read by `inference.py` at runtime; they are for training / optional bookkeeping.
+
+```
+pocket-agent/                         # cwd for all CLI / Gradio / Python imports
+├── inference.py
+├── Makefile
+├── starter/
+└── artifacts/                        # you create this (notebook or unzip from Drive/Release)
+    ├── adapter/                      # optional for running the demo — keep if you want to re-merge or inspect LoRA
+    │   └── (adapter_config.json, adapter_model.safetensors, … after training)
+    ├── tokenizer/                    # optional duplicate — Section 4 saves tokenizer here; inference does not use this path
+    └── quantized_model/              # REQUIRED — must exist for demo / eval / grader
+        ├── config.json
+        ├── generation_config.json
+        ├── model.safetensors         # merged FP16 weights (large file; not in Git)
+        ├── tokenizer_config.json
+        ├── tokenizer.json            # single-file tokenizer (Qwen-style)
+        └── chat_template.jinja
+```
+
+| Path | Needed to run `inference.py` / demo? |
+|------|-------------------------------------|
+| `artifacts/quantized_model/*` (Hugging Face format above) | **Yes** — loader uses `AutoTokenizer.from_pretrained` + `AutoModelForCausalLM.from_pretrained` on this directory. |
+| `artifacts/adapter/` | **No** for inference — only if you train or re-run merge with a new adapter. |
+| `artifacts/tokenizer/` | **No** — redundant if `quantized_model/` contains tokenizer files (as the notebook saves). |
+
+If `quantized_model/` is missing or incomplete, `inference.py` raises **`FileNotFoundError`** pointing at `artifacts/quantized_model`.
+
+---
+
+## Demo usage
+
+All demos assume **dependencies installed** (`make install` or the notebook’s `%pip` cell) and **`artifacts/quantized_model/`** present as in the table above. Run commands from the **`pocket-agent/`** directory so `import inference` resolves and paths match.
+
+### Google Colab (Gradio — notebook Section 10)
+
+1. Run the notebook through **Section 7** (merge, save FP16, load on CPU, `set_eval_model`) so the model is in memory **or** ensure `artifacts/` is populated from Drive/zip on the VM.
+2. Execute **Section 9** if you want a fresh `inference.py` on disk (optional if you cloned the repo with [`inference.py`](inference.py) already present).
+3. Run **Section 10 — Gradio Chatbot Demo**. When the cell finishes building the UI, use the **public URL** or **Colab’s proxy link** Gradio prints (`Running on...` / `share=` if enabled). Chat in the UI; assistant turns should show raw `<tool_call>...</tool_call>` or plain text refusals depending on the prompt.
+4. If the cell is slow to start, wait for FastAPI/Gradio startup; avoid interrupting the kernel mid-build (an interrupted run may show `KeyboardInterrupt` in stored outputs).
+
+### Local / CLI — `make demo`
+
+```bash
+cd pocket-agent
+make install
+# Place artifacts/quantized_model/ (see layout above), then:
+make demo
+```
+
+This launches a **Gradio** `ChatInterface` that calls `run(message, history)` from [`inference.py`](inference.py). Stop with **Ctrl+C** in the terminal.
+
+### Quick smoke test (no Gradio)
+
+```bash
+cd pocket-agent
+python inference.py
+```
+
+Runs the small `if __name__ == "__main__"` block at the bottom of [`inference.py`](inference.py) (a few fixed prompts).
+
+### Public dev eval (optional)
+
+```bash
+cd pocket-agent
+make eval
+```
+
+Loads [`inference.py`](inference.py) and scores against [`starter/public_test.jsonl`](starter/public_test.jsonl) via [`starter/eval_harness_contract.py`](starter/eval_harness_contract.py).
 
 ---
 
