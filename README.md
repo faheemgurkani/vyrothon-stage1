@@ -282,7 +282,7 @@ pocket-agent/
 
 ## Required artifacts and folder layout (inference + demos)
 
-Everything that **loads the model** ([`inference.py`](inference.py), `make eval`, `make demo`, and the **Section 10** Gradio UI in the notebook) expects a single writable tree under the **repository root**. Paths are fixed relative to [`inference.py`](inference.py): `Path(__file__).parent / "artifacts" / "quantized_model"`.
+Everything that **loads the model** ([`inference.py`](inference.py), `make eval`, `make demo`, and the **Section 10** Gradio UI in the notebook) expects a single writable tree under the **Pocket-Agent project root** (the directory that contains `inference.py`). For example, if your tree is `competitions/pocket-agent/inference.py`, then `competitions/pocket-agent/artifacts/` is the right place — **not** a parent folder like `competitions/artifacts`. Paths are fixed in code: `Path(__file__).parent / "artifacts" / "quantized_model"`.
 
 ### Minimum layout to run the demo
 
