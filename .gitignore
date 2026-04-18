@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------------------
+# Pocket-Agent — keep repo under GitHub limits (100 MB per file, sensible total)
+# ---------------------------------------------------------------------------
+
+# Trained weights & checkpoints (often 500 MB–1 GB+; never commit to Git)
+artifacts/
+**/model.safetensors
+**/*.safetensors
+**/*.bin
+**/pytorch_model.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.gguf
+*.ggml
+
+# Hugging Face / training caches (local or CI)
+.cache/
+**/hub/
+**/.huggingface/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+**/ipython_kernel_*.json
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Logs & temp
+*.log
+tmp/
+temp/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Colab / optional local copies
+*.zip
